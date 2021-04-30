@@ -1,0 +1,80 @@
+#!/bin/bash
+
+[ -z "${MAX_PANE_COUNT}" ] && MAX_PANE_COUNT=9
+
+
+function command_list() {
+  local section
+  cat - | while read -r line; do
+    if [[ "$line" == [* ]]; then
+      [[ -z $section ]] || parse_section $section || exit 1
+      section=$line
+    else
+      eval param_${line}
+    fi
+  done
+}
+
+
+function parse_section() {
+  local section=$1
+  if [[ $section = '[command]' ]]; then
+    [[ -z $param_exec ]] && echo 'not found a key: exec' >&2 && exit 1
+    echo $param_exec
+  elif [[ $section = '[sleep]' ]]; then
+    [[ -z $param_sec ]] && echo 'not found a key: "sec"' >&2 && exit 1
+    echo "sleep ${param_sec}"
+  else
+    echo "unknown section was found: ${section}" >&2
+    exit 1
+  fi
+}
+
+
+function split_and_run() {
+  local run_cmd
+  local sleep_cmds=''
+  local panes_cnt=0
+  local windows_cnt=0
+  cat - | while read -r cmd; do
+    if [[ $cmd == sleep* ]]; then
+      sleep_cmds="${sleep_cmds}; ${cmd}"
+      sleep_cmds="${sleep_cmds#; }"
+      continue
+    fi
+
+    if [[ $panes_cnt = 0 ]]; then
+      windows_cnt=$(($windows_cnt + 1))
+      tmux new-window -n "window-${windows_cnt}"
+    else
+      tmux split-window
+      tmux select-layout tiled
+    fi
+    run_cmd="${sleep_cmds}; ${cmd}"
+    tmux send-keys "${run_cmd#; }" C-m
+
+    panes_cnt=$(($panes_cnt + 1))
+    if [[ $panes_cnt -ge $MAX_PANE_COUNT ]]; then
+      panes_cnt=0
+    fi
+  done
+  tmux select-pane -t 1
+}
+
+
+function main() {
+  commands=$(cat - \
+    | sed -E 's/;.*$//; s/(^ +| +$)//; /^$/d' | sed -E '$s/$/\n[EOF]/' \
+    | command_list) || exit 0
+  echo "$commands" | split_and_run
+}
+
+
+[[ -z "$TMUX" ]] && echo 'tmux is not running' >&2 && exit 1
+if [[ -p /dev/stdin ]]; then
+  cat - | main
+  exit 0
+fi
+[[ $# -ne 1 ]] && echo 'Usage: parapane file' >&2 && exit 1
+[[ ! -f $1 ]] && echo "$1 is not a file." >&2 && exit 1
+cat $1 | main
