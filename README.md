@@ -56,3 +56,5 @@ exec="echo this command is reused in #1 and #2"
 exec="echo this command is reused in #3"
 [command];#3
 ```
+
+If you want to create a new window, you should use `[new-window]`.

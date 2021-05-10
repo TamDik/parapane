@@ -24,6 +24,8 @@ function parse_section() {
   elif [[ $section = '[sleep]' ]]; then
     [[ -z $param_sec ]] && echo 'not found a key: "sec"' >&2 && exit 1
     echo "sleep ${param_sec}"
+  elif [[ $section = '[new-window]' ]]; then
+    echo 'new-window'
   else
     echo "unknown section was found: ${section}" >&2
     exit 1
@@ -40,6 +42,10 @@ function split_and_run() {
     if [[ $cmd == sleep* ]]; then
       sleep_cmds="${sleep_cmds}; ${cmd}"
       sleep_cmds="${sleep_cmds#; }"
+      continue
+    fi
+    if [[ $cmd == new-window ]]; then
+      panes_cnt=0
       continue
     fi
 
