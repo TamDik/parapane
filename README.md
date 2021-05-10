@@ -46,6 +46,17 @@ If you want to change the number of panes per window, you should set `$MAX_PANE_
 export MAX_PANE_COUNT=6
 ```
 
+If you want to create a new window, you should use `[new-window]`.
+```
+[command]
+exec="echo this command is executed in the first window."
+
+[new-window]
+
+[command]
+exec="echo this command is executed in the second window."
+```
+
 If you want to execute the same command in consecutive panes, you can omit `exec` keys.
 ```
 [command]
@@ -56,5 +67,3 @@ exec="echo this command is reused in #1 and #2"
 exec="echo this command is reused in #3"
 [command];#3
 ```
-
-If you want to create a new window, you should use `[new-window]`.
