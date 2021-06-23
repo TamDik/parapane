@@ -68,7 +68,7 @@ function split_and_run() {
 }
 
 
-function main() {
+function run_commands() {
   commands=$(cat - \
     | sed -E 's/;.*$//; s/(^ +| +$)//; /^$/d' | sed -E '$s/$/\n[EOF]/' \
     | command_list) || exit 0
@@ -76,11 +76,15 @@ function main() {
 }
 
 
-[[ -z "$TMUX" ]] && echo 'tmux is not running' >&2 && exit 1
-if [[ -p /dev/stdin ]]; then
-  cat - | main
-  exit 0
-fi
-[[ $# -ne 1 ]] && echo 'Usage: parapane file' >&2 && exit 1
-[[ ! -f $1 ]] && echo "$1 is not a file." >&2 && exit 1
-cat $1 | main
+function main() {
+  [[ -z "$TMUX" ]] && echo 'tmux is not running' >&2 && exit 1
+  if [[ -p /dev/stdin ]]; then
+    cat - | run_commands
+    exit 0
+  fi
+  [[ $# -ne 1 ]] && echo 'Usage: parapane file' >&2 && exit 1
+  [[ ! -f $1 ]] && echo "$1 is not a file." >&2 && exit 1
+  cat $1 | run_commands
+}
+
+main "$@"
