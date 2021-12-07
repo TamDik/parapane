@@ -57,6 +57,18 @@ exec="echo this command is executed in the first window."
 exec="echo this command is executed in the second window."
 ```
 
+If you want to use variables, you should use `[definitions]`.
+```
+[definitions]
+name=$(whoami)
+
+[command]
+exec="echo Are you $name\?"
+
+[command]
+exec="echo Yes, I am $name."
+```
+
 If you want to execute the same command in consecutive panes, you can omit `exec` keys.
 ```
 [command]
